@@ -1,12 +1,12 @@
 import { Component } from 'react';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { SearchBar } from './components/SearchBar/SearchBar';
 import { ImageGallery } from './components/ImageGallery/ImageGallery';
 import { BtnLoadMore } from './components/BtnLoadMore/BtnLoadMore';
 import { Loader } from "./components/Loader/Loader";
 import { Modal } from './components/Modal/Modal';
 import { getImages } from './services/api';
-import { params } from './services/params';
 import { Box } from "./components/Box";
 
 export class App extends Component {
@@ -16,7 +16,6 @@ export class App extends Component {
     page: 1,
     items: [],
     showModal: false,
-    activeIndex: null,
   };
 
   componentDidMount() {
@@ -32,20 +31,20 @@ export class App extends Component {
         this.setState({ items: [] });
       }
       this.fetchGalleryItems();
-    }
-  }
+   };
+  };
 
   fetchGalleryItems = () => {
     const { searchQuery, page } = this.state;
 
-    getImages({ ...params, page, q: searchQuery })
+    getImages({ page, q: searchQuery })
       .then(res => {
         this.setState(prevState => ({
           items: [...prevState.items, ...res],
           isLoading: false,
         }));
         if (res.length === 0) {
-          return alert(
+          return toast.error(
             'Oh, the search results were not successful. Try again.'
           );
         }
@@ -54,10 +53,11 @@ export class App extends Component {
         this.setState({
           isLoading: false,
         });
+        toast.error(`Sorry something went wrong.`);
       });
   };
 
-   handleSubmit = ({ searchQuery }) => {
+  handleSubmit = ({ searchQuery }) => {
     if (searchQuery.trim() !== '') {
       return this.setState({ searchQuery, page: 1 });
     }
@@ -70,16 +70,16 @@ export class App extends Component {
     }));
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
+  toggleModal = imgData => {
+    this.setState(({ showModal }) => ({
+      showModal: !showModal,
+      imgData,
+    }));
   };
 
-  setActiveIndex = index => {
-    this.setState({ activeIndex: index });
-  };
 
   render() {
-  const {  showModal, items, activeIndex, isLoading} = this.state;
+  const {  showModal, items, imgData, isLoading} = this.state;
     return (
       <Box>
         <SearchBar onSubmit={this.handleSubmit} />
@@ -87,17 +87,19 @@ export class App extends Component {
           <ImageGallery
             items={items}
             toggleModal={this.toggleModal}
-            setActiveIndex={this.setActiveIndex}
-            loadMore={this.loadMore}
           />
         )}
         {isLoading && <Loader />}
         {items.length > 0 && <BtnLoadMore loadMore={this.loadMore} />}
         {showModal && (
-          <Modal item={items[activeIndex]} onClose={this.toggleModal} />
+          <Modal item={items} onClose={this.toggleModal}>
+            <img alt={imgData.alt} src={imgData.url} />
+          </Modal>
         )}
+         <ToastContainer autoClose={3000} theme="colored"pauseOnHover position="top-center"/>
       </Box>
     );
   };
 };
+
 
