@@ -16,7 +16,7 @@ const customAxios = axios.create({
 });
 export const getImages = async params => {
     try {
-        const response = await customAxios.get('', { params: { ...params, key: API_KEY } })
+        const response = await customAxios.get('', { params: { ...params, key: API_KEY }})
         return response.data.hits;
     } catch {
         console.log('error');
